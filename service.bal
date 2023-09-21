@@ -25,14 +25,16 @@ service / on new http:Listener(9090) {
     #
     # + fhirPathRequest - Request for the API
     # + return - Result Map of Fhirpath evaluations
-    isolated resource function post fhirpath (@http:Payload FhirPathRequest fhirPathRequest) returns http:Response {
+    isolated resource function post fhirpath (@http:Payload fhirpath:FhirPathRequest fhirPathRequest) returns http:Response|error {
         map<fhirpath:FhirPathResult> outcome = {};
-        map<json> fhirResource = fhirPathRequest.fhirResource;
+        json fhirResource = fhirPathRequest.fhirResource;
         string[]|string fhirPath = fhirPathRequest.fhirPath;
+
         if fhirPath is string[] {
             foreach string individualFhirPath in fhirPath {
                 outcome[individualFhirPath] = fhirpath:getFhirPathResult(fhirResource, individualFhirPath);
             }
+
         } else {
             outcome[fhirPath] = fhirpath:getFhirPathResult(fhirResource, fhirPath);
         }
@@ -41,12 +43,3 @@ service / on new http:Listener(9090) {
         return response;
     }
 }
-
-# Record to hold FhirPath request parameters.
-#
-# + fhirResource - Fhir Resource
-# + fhirPath - Fhir Path
-public type FhirPathRequest record {|
-    map<json> fhirResource;
-    string[]|string fhirPath;
-|};
